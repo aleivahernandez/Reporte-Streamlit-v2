@@ -14,6 +14,11 @@ page_style = """
 body {
     background-color: #f9f4ef;
 }
+/* Estilo para el contenedor principal de la aplicación */
+.stApp {
+    max-width: 30% !important; /* Limita el ancho máximo al 30% de la pantalla */
+    margin: auto; /* Centra la aplicación en la pantalla */
+}
 .card {
     background-color: white;
     border: 1px solid #ddd;
