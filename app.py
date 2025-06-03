@@ -16,7 +16,7 @@ body {
 }
 /* Estilo para el contenedor principal de la aplicación */
 .stApp {
-    max-width: 30% !important; /* Limita el ancho máximo al 30% de la pantalla */
+    max-width: 80% !important; /* Limita el ancho máximo al 80% de la pantalla */
     margin: auto; /* Centra la aplicación en la pantalla */
 }
 .card {
@@ -79,7 +79,7 @@ body {
 .youtube-container {
     position: relative;
     width: 100%;
-    max-width: 800px; /* Limita el ancho máximo del video */
+    max-width: 30% !important; /* Limita el ancho máximo del video al 30% de su contenedor */
     padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
     height: 0;
     overflow: hidden;
