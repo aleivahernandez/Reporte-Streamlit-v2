@@ -3,8 +3,6 @@ import pandas as pd
 from deep_translator import GoogleTranslator
 import re
 # Ya no necesitamos 'time' para el retardo en la traducción en esta versión
-# Importar la función de web scraping desde el nuevo archivo
-from report_scraper import scrape_reports_page
 
 # Configuración de la página de Streamlit
 st.set_page_config(page_title="Informe de Patentes Apícolas V1", layout="wide")
@@ -242,9 +240,10 @@ elif st.session_state.current_view == 'apicola':
     # ===== Lógica de la vista detallada o landing de patentes apícolas =====
     query_params = st.query_params
 
-    # Botón para volver a la página principal desde la lista de patentes
+    # Botón para volver a la página principal desde la lista de patentes o detalle de patente apícola
     if st.button("🔙 Volver a la página principal", key="back_to_home_from_apicola_list"):
         st.session_state.current_view = 'home'
+        st.query_params.clear() # <--- Limpiar el parámetro 'idx' al volver a la página principal
         st.rerun()
 
     if "idx" in query_params:
