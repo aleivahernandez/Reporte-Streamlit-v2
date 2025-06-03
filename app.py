@@ -70,9 +70,29 @@ body {
     padding: 0px !important;
     margin: 0px !important;
 }
+/* Estilos para el iframe de YouTube */
+.youtube-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+    height: 0;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+.youtube-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
 </style>
 """
 st.markdown(page_style, unsafe_allow_html=True)
+
+# Inicializar el estado de la vista
+if 'current_view' not in st.session_state:
+    st.session_state.current_view = 'home'
 
 # ===== Funciones de utilidad =====
 def limpiar_titulo(titulo):
@@ -86,7 +106,6 @@ def traducir_texto(texto, src="en", dest="es"):
     if not isinstance(texto, str) or len(texto.strip()) < 5:
         return "Contenido no disponible o demasiado corto para traducir."
     try:
-        # En esta versión, no se añade retardo, como en la original
         return GoogleTranslator(source=src, target=dest).translate(texto)
     except Exception as e:
         # st.warning(f"Error de traducción para el texto: '{texto[:50]}...' - {e}") # Descomentar para depurar errores de traducción
@@ -130,89 +149,126 @@ def cargar_y_preparar_datos(filepath):
 
     return df
 
-# ===== Cargar y preparar datos =====
-# Asegúrate de que el nombre del archivo CSV sea correcto
-df = cargar_y_preparar_datos("ORBIT_REGISTRO_QUERY.csv")
+# ===== Lógica principal de la aplicación: Control de vistas =====
+if st.session_state.current_view == 'home':
+    st.title("Bienvenido a nuestra Plataforma de Soluciones")
+
+    # Contenedor para el video de YouTube para hacerlo responsivo
+    st.markdown(
+        """
+        <div class="youtube-container">
+            <iframe src="https://www.youtube.com/embed/2UjdalNj7Qw?si=IoTVBxYvOy_-XOAm" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    # Nota: La URL del iframe proporcionada (https://www.youtube.com/embed/2UjdalNj7Qw?si=IoTVBxYvOy_-XOAm)
+    # parece ser un placeholder y podría no mostrar un video real de YouTube.
+    # Para un video real, necesitarías una URL de embed de YouTube válida.
+
+    st.write("Selecciona una solución para explorar:")
+    solution_choice = st.selectbox(
+        "Busca tu solución",
+        ("Selecciona una opción", "Solución Apícola", "Solución Cárnica"),
+        index=0 # Opción por defecto
+    )
+
+    if solution_choice == "Solución Apícola":
+        st.session_state.current_view = 'apicola'
+        st.rerun() # Recarga la aplicación para mostrar la vista apícola
+    elif solution_choice == "Solución Cárnica":
+        st.info("La solución Cárnica aún no está disponible. ¡Pronto tendremos más información!")
+        # No se redirige a ninguna parte, se queda en la página principal
+
+elif st.session_state.current_view == 'apicola':
+    # ===== Cargar y preparar datos (solo se carga cuando se necesita la vista apícola) =====
+    # Asegúrate de que el nombre del archivo CSV sea correcto
+    df = cargar_y_preparar_datos("ORBIT_REGISTRO_QUERY.csv") # <--- AÑADIDA EXTENSIÓN .csv
 
 
-# ===== Lógica principal de la aplicación: Landing page o vista detallada =====
-query_params = st.query_params
+    # ===== Lógica de la vista detallada o landing de patentes apícolas =====
+    query_params = st.query_params
 
-if "idx" in query_params:
-    # Vista detallada de una patente
-    try:
-        idx = int(query_params["idx"][0])
-        if 0 <= idx < len(df):
-            patente = df.iloc[idx]
-            st.title(patente["Titulo_es"])
+    if "idx" in query_params:
+        # Vista detallada de una patente
+        try:
+            idx = int(query_params["idx"][0])
+            if 0 <= idx < len(df):
+                patente = df.iloc[idx]
+                st.title(patente["Titulo_es"])
 
-            # --- SECCIÓN DE INFORMACIÓN CLAVE ---
-            st.subheader("Información Clave")
+                # --- SECCIÓN DE INFORMACIÓN CLAVE ---
+                st.subheader("Información Clave")
 
-            # Número de Publicación (usando el nombre de columna original)
-            st.markdown(f"- **Número de Publicación:** {patente.get('Publication numbers', 'No disponible')}")
+                # Número de Publicación (usando el nombre de columna original)
+                st.markdown(f"- **Número de Publicación:** {patente.get('Publication numbers', 'No disponible')}")
 
-            # País de Origen (primeros dos caracteres del número de publicación)
-            pub_number_str = str(patente.get('Publication numbers', ''))
-            pais_origen = pub_number_str[:2] if len(pub_number_str) >= 2 else "No disponible"
-            st.markdown(f"- **País de Origen:** {pais_origen}")
+                # País de Origen (primeros dos caracteres del número de publicación)
+                pub_number_str = str(patente.get('Publication numbers', ''))
+                pais_origen = pub_number_str[:2] if len(pub_number_str) >= 2 else "No disponible"
+                st.markdown(f"- **País de Origen:** {pais_origen}")
 
-            # Fecha de Publicación (primer elemento si hay varios, separados por espacio o punto y coma)
-            pub_dates_str = str(patente.get('Publication dates', ''))
-            fecha_publicacion = re.split(r'[; ]+', pub_dates_str)[0].strip() if pub_dates_str else "No disponible"
-            st.markdown(f"- **Fecha de Publicación:** {fecha_publicacion}")
+                # Fecha de Publicación (primer elemento si hay varios, separados por espacio o punto y coma)
+                pub_dates_str = str(patente.get('Publication dates', ''))
+                fecha_publicacion = re.split(r'[; ]+', pub_dates_str)[0].strip() if pub_dates_str else "No disponible"
+                st.markdown(f"- **Fecha de Publicación:** {fecha_publicacion}")
 
-            # Inventores (mostrados como lista) - Usando "Inventors"
-            inventors = patente.get('Inventors', 'No disponible')
-            if pd.isna(inventors) or inventors == 'No disponible':
-                st.markdown(f"- **Inventores:** No disponible")
+                # Inventores (mostrados como lista) - Usando "Inventors"
+                inventors = patente.get('Inventors', 'No disponible')
+                if pd.isna(inventors) or inventors == 'No disponible':
+                    st.markdown(f"- **Inventores:** No disponible")
+                else:
+                    inventors_list = [inv.strip() for inv in str(inventors).split(';') if inv.strip()]
+                    st.markdown(f"- **Inventores:**")
+                    for inv in inventors_list:
+                        st.markdown(f"  - {inv}")
+                st.markdown("---")
+                # --- FIN SECCIÓN DE INFORMACIÓN CLAVE ---
+
+                # Resumen de la patente (usando el nombre de columna original)
+                st.markdown(f"**Resumen:** {patente.get('Resumen_es', 'Resumen no disponible.')}")
+                st.markdown("---")
+
+                # Botón para volver a la página principal
+                if st.button("🔙 Volver"):
+                    # Al volver, redirigimos a la página principal de la app (home)
+                    st.session_state.current_view = 'home'
+                    query_params.clear() # Limpia los parámetros de la URL
+                    st.rerun() # Fuerza una nueva ejecución de la app
             else:
-                inventors_list = [inv.strip() for inv in str(inventors).split(';') if inv.strip()]
-                st.markdown(f"- **Inventores:**")
-                for inv in inventors_list:
-                    st.markdown(f"  - {inv}")
-            st.markdown("---")
-            # --- FIN SECCIÓN DE INFORMACIÓN CLAVE ---
-
-            # Resumen de la patente (usando el nombre de columna original)
-            st.markdown(f"**Resumen:** {patente.get('Resumen_es', 'Resumen no disponible.')}")
-            st.markdown("---")
-
-            # Botón para volver a la página principal
-            if st.button("🔙 Volver"):
-                query_params.clear()
-                st.rerun()
-        else:
-            st.error("Índice de patente no válido.")
+                st.error("Índice de patente no válido.")
+                if st.button("🔙 Volver a la página principal"):
+                    st.session_state.current_view = 'home'
+                    query_params.clear()
+                    st.rerun()
+        except ValueError:
+            st.error("El índice proporcionado no es un número válido.")
             if st.button("🔙 Volver a la página principal"):
+                st.session_state.current_view = 'home'
                 query_params.clear()
                 st.rerun()
-    except ValueError:
-        st.error("El índice proporcionado no es un número válido.")
-        if st.button("🔙 Volver a la página principal"):
-            query_params.clear()
-            st.rerun()
-    except Exception as e:
-        st.error(f"Error al cargar la patente seleccionada: {e}")
-        st.exception(e)
-        if st.button("🔙 Volver a la página principal"):
-            query_params.clear()
-            st.rerun()
-else:
-    # Landing page con la lista de tarjetas
-    st.title("Informe de Patentes Apícolas V1 - Landing Page")
-    st.markdown("Haz clic en una patente para ver más detalles.")
-
-    # Contenedor HTML para las tarjetas (gestionado por CSS Flexbox)
-    st.markdown('<div class="container">', unsafe_allow_html=True)
-
-    # Iterar sobre las patentes para crear las tarjetas
-    cols = st.columns(3) # Volvemos a 3 columnas
-    for i, titulo in enumerate(df["Titulo_es"]):
-        with cols[i % 3]: # Asigna cada tarjeta a una columna de 3
-            # Creamos el botón con el título como etiqueta
-            if st.button(titulo, key=f"patent_card_{i}"):
-                st.query_params["idx"] = str(i)
+        except Exception as e:
+            st.error(f"Error al cargar la patente seleccionada: {e}")
+            st.exception(e)
+            if st.button("🔙 Volver a la página principal"):
+                st.session_state.current_view = 'home'
+                query_params.clear()
                 st.rerun()
+    else:
+        # Landing page con la lista de tarjetas de patentes apícolas
+        st.title("Informe de Patentes Apícolas - Landing Page")
+        st.markdown("Haz clic en una patente para ver más detalles.")
 
-    st.markdown('</div>', unsafe_allow_html=True)
+        # Contenedor HTML para las tarjetas (gestionado por CSS Flexbox)
+        st.markdown('<div class="container">', unsafe_allow_html=True)
+
+        # Iterar sobre las patentes para crear las tarjetas
+        cols = st.columns(3) # Volvemos a 3 columnas
+        for i, titulo in enumerate(df["Titulo_es"]):
+            with cols[i % 3]: # Asigna cada tarjeta a una columna de 3
+                # Creamos el botón con el título como etiqueta
+                if st.button(titulo, key=f"patent_card_{i}"):
+                    st.query_params["idx"] = str(i)
+                    st.rerun()
+
+        st.markdown('</div>', unsafe_allow_html=True)
