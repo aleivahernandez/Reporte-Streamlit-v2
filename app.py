@@ -190,6 +190,11 @@ elif st.session_state.current_view == 'apicola':
     # ===== Lógica de la vista detallada o landing de patentes apícolas =====
     query_params = st.query_params
 
+    # Botón para volver a la página principal desde la lista de patentes
+    if st.button("🔙 Volver a la página principal", key="back_to_home_from_apicola_list"):
+        st.session_state.current_view = 'home'
+        st.rerun()
+
     if "idx" in query_params:
         # Vista detallada de una patente
         try:
@@ -230,10 +235,8 @@ elif st.session_state.current_view == 'apicola':
                 st.markdown(f"**Resumen:** {patente.get('Resumen_es', 'Resumen no disponible.')}")
                 st.markdown("---")
 
-                # Botón para volver a la página principal
-                if st.button("🔙 Volver"):
-                    # Al volver, redirigimos a la página principal de la app (home)
-                    st.session_state.current_view = 'home'
+                # Botón para volver a la página principal (desde la vista detallada)
+                if st.button("🔙 Volver a la lista de patentes", key="back_to_apicola_list"): # Cambiado el texto
                     query_params.clear() # Limpia los parámetros de la URL
                     st.rerun() # Fuerza una nueva ejecución de la app
             else:
