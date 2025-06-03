@@ -2,104 +2,70 @@ import streamlit as st
 import pandas as pd
 from deep_translator import GoogleTranslator
 import re
-# Importar la función de web scraping desde el nuevo archivo
-from webscraping_utils import get_direct_image_url_from_page
 
 # Configuración de la página de Streamlit
-st.set_page_config(page_title="Informe de Patentes Apícolas V2", layout="wide")
+st.set_page_config(page_title="Informe de Patentes Apícolas V1", layout="wide")
 
 # ===== Estilos CSS personalizados =====
 # Estos estilos controlan la apariencia de la página y las tarjetas.
-# Se ha modificado para que las tarjetas de botón de Streamlit contengan una imagen y un título.
+# Se ha revertido al estilo original de tarjeta con solo texto.
 page_style = """
 <style>
 body {
     background-color: #f9f4ef;
 }
-
-/* Estilos para el contenedor principal de las tarjetas */
-.container {
-    display: flex;
-    flex-wrap: wrap; /* Permite que las tarjetas se envuelvan a la siguiente línea */
-    justify-content: center; /* Centra las tarjetas horizontalmente */
-    gap: 20px; /* Espacio uniforme entre las tarjetas */
-    padding: 10px; /* Pequeño padding alrededor del contenedor */
-}
-
-/* Estilo para la "tarjeta" visual que contendrá la imagen, título y botón */
-.custom-card {
+.card {
     background-color: white;
     border: 1px solid #ddd;
     border-radius: 12px;
+    padding: 16px;
+    margin: 12px;
+    width: 300px; /* Ancho fijo de la tarjeta */
+    height: 120px; /* Alto fijo de la tarjeta */
     box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
     transition: transform 0.2s ease;
-    overflow: hidden; /* Asegura que el contenido no se desborde */
-    width: 300px; /* Ancho fijo de la tarjeta */
-    height: 280px; /* Alto fijo de la tarjeta (imagen + título + botón) */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between; /* Espacio entre imagen/título y botón */
-    align-items: center;
-    padding-bottom: 10px; /* Espacio para el botón en la parte inferior */
-}
-
-.custom-card:hover {
-    transform: scale(1.02);
-}
-
-/* Contenedor de la imagen dentro de la tarjeta */
-.image-container-card {
-    width: 100%;
-    height: 180px; /* Alto fijo para la imagen */
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-    background-color: #f0f0f0; /* Color de fondo si no hay imagen */
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
-}
-
-/* Estilos para la imagen dentro del contenedor */
-.image-container-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain; /* Ajustar la imagen para que quepa sin recortarse */
-}
-
-/* Contenedor del título dentro de la tarjeta */
-.title-container-card {
-    padding: 8px 12px;
-    text-align: center;
     font-weight: bold;
-    font-size: 16px;
-    flex-grow: 1; /* Permite que el título ocupe el espacio restante */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: normal;
+    text-align: center;
 }
-
-/* Estilos para el botón "Ver detalles" */
+.card:hover {
+    transform: scale(1.02);
+    background-color: #f0f0f0;
+}
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+/* Estilos para el botón de Streamlit para que se parezca a una tarjeta */
 .stButton>button {
-    background-color: #4CAF50; /* Un color verde para el botón */
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 15px;
-    margin-top: 5px; /* Espacio entre el título y el botón */
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 12px;
+    width: 300px; /* Ancho fijo para simular la tarjeta */
+    height: 120px; /* Alto fijo para simular la tarjeta */
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
     cursor: pointer;
     font-weight: bold;
-    transition: background-color 0.2s ease;
+    text-align: center;
+    display: flex; /* Para centrar el texto del botón */
+    align-items: center;
+    justify-content: center;
+    color: inherit; /* Heredar color de texto para que no sea el azul por defecto */
+    font-size: 16px; /* Ajustado para el tamaño de botón */
+    line-height: 1.3;
 }
-
 .stButton>button:hover {
-    background-color: #45a049;
+    transform: scale(1.02);
+    background-color: #f0f0f0;
 }
-
-/* Ajustes para las columnas de Streamlit para evitar márgenes duplicados */
+/* Aseguramos que las columnas de Streamlit no tengan márgenes internos inesperados */
 .stColumns > div {
     padding: 0px !important;
     margin: 0px !important;
@@ -140,7 +106,7 @@ def cargar_y_preparar_datos(filepath):
         "Abstract (Original Language)",
         "Publication Number",
         "Publication Date",
-        "Front Page Drawing",
+        # "Front Page Drawing", # No se usa en esta versión
         "Inventor - DWPI"
     ]
 
@@ -161,12 +127,6 @@ def cargar_y_preparar_datos(filepath):
     # Traducir resúmenes al español usando el nombre de columna original
     with st.spinner("Traduciendo resúmenes al español... Esto puede tomar un momento."):
         df["Resumen_es"] = [traducir_texto(t) for t in df["Abstract (Original Language)"]]
-
-    # --- NUEVO: Procesar URLs de imágenes para obtener enlaces directos ---
-    st.info("Intentando extraer URLs de imagen directas de las páginas de dibujo... Esto puede tardar.")
-    # Ahora llamamos a la función desde el archivo webscraping_utils
-    df['Direct_Image_URL'] = df['Front Page Drawing'].apply(get_direct_image_url_from_page)
-    # --- FIN NUEVO ---
 
     return df
 
@@ -239,38 +199,18 @@ if "idx" in query_params:
             st.rerun()
 else:
     # Landing page con la lista de tarjetas
-    st.title("Informe de Patentes Apícolas V2 - Landing Page")
+    st.title("Informe de Patentes Apícolas V1 - Landing Page")
     st.markdown("Haz clic en una patente para ver más detalles.")
 
     # Contenedor HTML para las tarjetas (gestionado por CSS Flexbox)
     st.markdown('<div class="container">', unsafe_allow_html=True)
 
     # Iterar sobre las patentes para crear las tarjetas
-    cols = st.columns(3) # Mantenemos 3 columnas
+    cols = st.columns(3) # Volvemos a 3 columnas
     for i, titulo in enumerate(df["Titulo_es"]):
         with cols[i % 3]: # Asigna cada tarjeta a una columna de 3
-            # Usamos la nueva columna 'Direct_Image_URL'
-            image_url = df.iloc[i].get('Direct_Image_URL', '')
-
-            # Si la URL de la imagen está vacía o no es válida, usa una imagen de placeholder
-            if not image_url or not isinstance(image_url, str):
-                image_url = "https://placehold.co/300x180/A0A0A0/FFFFFF?text=No+Image"
-
-            # Creamos un contenedor HTML para la tarjeta visual
-            st.markdown(f"""
-            <div class="custom-card">
-                <div class="image-container-card">
-                    <img src="{image_url}" onerror="this.onerror=null;this.src='https://placehold.co/300x180/A0A0A0/FFFFFF?text=No+Image';" alt="Imagen de la patente"/>
-                </div>
-                <div class="title-container-card">
-                    {titulo}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # Colocamos el botón de Streamlit justo debajo de la tarjeta HTML.
-            # Este botón es el que realmente manejará la interacción y la navegación.
-            if st.button("Ver detalles", key=f"patent_card_button_{i}"):
+            # Creamos el botón con el título como etiqueta
+            if st.button(titulo, key=f"patent_card_{i}"):
                 st.query_params["idx"] = str(i)
                 st.rerun()
 
