@@ -3,6 +3,8 @@ import pandas as pd
 from deep_translator import GoogleTranslator
 import re
 # Ya no necesitamos 'time' para el retardo en la traducción en esta versión
+# Importar la función de web scraping desde el nuevo archivo
+from report_scraper import scrape_reports_page
 
 # Configuración de la página de Streamlit
 st.set_page_config(page_title="Informe de Patentes Apícolas V1", layout="wide")
@@ -98,6 +100,9 @@ st.markdown(page_style, unsafe_allow_html=True)
 # Inicializar el estado de la vista
 if 'current_view' not in st.session_state:
     st.session_state.current_view = 'home'
+if 'vigilancia_report_type' not in st.session_state:
+    st.session_state.vigilancia_report_type = None
+
 
 # ===== Funciones de utilidad =====
 def limpiar_titulo(titulo):
@@ -187,7 +192,27 @@ if st.session_state.current_view == 'home':
 
     st.markdown("---") # Separador visual
 
-    # ===== Sección de Newsletter =====
+    # ===== Sección de Informes de Vigilancia =====
+    st.subheader("Informes de Vigilancia")
+    report_type_choice = st.selectbox(
+        "Selecciona el tipo de informe de vigilancia",
+        ("Selecciona una opción", "Patentes Abiertas", "Patentes Protegidas"),
+        index=0
+    )
+
+    if report_type_choice == "Patentes Abiertas":
+        st.session_state.current_view = 'vigilancia_patentes'
+        st.session_state.vigilancia_report_type = 'abiertas'
+        st.rerun()
+    elif report_type_choice == "Patentes Protegidas":
+        st.session_state.current_view = 'vigilancia_patentes'
+        st.session_state.vigilancia_report_type = 'protegidas'
+        st.rerun()
+    # ===== Fin Sección de Informes de Vigilancia =====
+
+    st.markdown("---") # Separador visual
+
+    # ===== Sección de Newsletter (existente) =====
     st.subheader("Suscríbete a nuestro Newsletter")
     st.write("Mantente al día con nuestras últimas soluciones e innovaciones.")
 
@@ -211,7 +236,7 @@ if st.session_state.current_view == 'home':
 elif st.session_state.current_view == 'apicola':
     # ===== Cargar y preparar datos (solo se carga cuando se necesita la vista apícola) =====
     # Asegúrate de que el nombre del archivo CSV sea correcto
-    df = cargar_y_preparar_datos("ORBIT_REGISTRO_QUERY.csv") # <--- AÑADIDA EXTENSIÓN .csv
+    df = cargar_y_preparar_datos("ORBIT_REGISTRO_QUERY.csv")
 
 
     # ===== Lógica de la vista detallada o landing de patentes apícolas =====
@@ -303,3 +328,55 @@ elif st.session_state.current_view == 'apicola':
                     st.rerun()
 
         st.markdown('</div>', unsafe_allow_html=True)
+
+elif st.session_state.current_view == 'vigilancia_patentes':
+    st.title("Informes de Vigilancia de Patentes")
+
+    # Botón para volver a la página principal desde la lista de informes
+    if st.button("🔙 Volver a la página principal", key="back_to_home_from_vigilancia_list"):
+        st.session_state.current_view = 'home'
+        st.session_state.vigilancia_report_type = None # Limpiar el tipo de informe
+        st.rerun()
+
+    # URL de los informes de INAPI
+    reports_url = "https://www.inapi.cl/centro-de-documentacion/informes"
+
+    with st.spinner(f"Scrapeando informes de {st.session_state.vigilancia_report_type}... Esto puede tomar un momento."):
+        all_reports = scrape_reports_page(reports_url)
+
+    if not all_reports:
+        st.warning("No se encontraron informes o hubo un error al scrapear la página. Por favor, verifica la URL y la estructura de la página.")
+    else:
+        # Filtrar informes según la selección
+        filtered_reports = []
+        if st.session_state.vigilancia_report_type == 'abiertas':
+            st.subheader("Patentes Abiertas (Caducadas)")
+            for report in all_reports:
+                # Filtrar por "Patentes Caducadas" en el título
+                if "patentes caducadas" in report['title'].lower():
+                    filtered_reports.append(report)
+        elif st.session_state.vigilancia_report_type == 'protegidas':
+            st.subheader("Patentes Protegidas")
+            for report in all_reports:
+                # Filtrar por NO "Patentes Caducadas" en el título
+                if "patentes caducadas" not in report['title'].lower():
+                    filtered_reports.append(report)
+
+        if not filtered_reports:
+            st.info(f"No se encontraron informes de tipo '{st.session_state.vigilancia_report_type}'.")
+        else:
+            st.markdown('<div class="container">', unsafe_allow_html=True)
+            cols = st.columns(3)
+            for i, report in enumerate(filtered_reports):
+                with cols[i % 3]:
+                    # Usamos st.markdown con un enlace <a> para que la tarjeta sea clicable al PDF
+                    # target="_blank" abre el PDF en una nueva pestaña
+                    card_html = f"""
+                    <div class="card" style="cursor: pointer;">
+                        <a href="{report['pdf_link']}" target="_blank" style="text-decoration: none; color: inherit; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
+                            {report['title']}
+                        </a>
+                    </div>
+                    """
+                    st.markdown(card_html, unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
