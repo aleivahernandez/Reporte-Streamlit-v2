@@ -120,9 +120,21 @@ def cargar_y_preparar_datos(filepath):
     # Limpiar títulos usando el nombre de columna original
     df["Titulo_limpio"] = df["Title (Original language)"].apply(limpiar_titulo)
 
+    # --- DEBUGGING TRADUCCIÓN: Mostrar los primeros títulos originales ---
+    st.subheader("DEBUG: Primeros títulos originales antes de traducir")
+    for j in range(min(5, len(df))): # Mostrar los primeros 5 títulos
+        st.text(f"Original Title[{j}]: {df['Title (Original language)'].iloc[j]}")
+    # --- FIN DEBUGGING TRADUCCIÓN ---
+
     # Traducir títulos al español usando el nombre de columna original
     with st.spinner("Traduciendo títulos al español... Esto puede tomar un momento."):
         df["Titulo_es"] = [traducir_texto(t) for t in df["Titulo_limpio"]]
+
+    # --- DEBUGGING TRADUCCIÓN: Mostrar los primeros resúmenes originales ---
+    st.subheader("DEBUG: Primeros resúmenes originales antes de traducir")
+    for j in range(min(5, len(df))): # Mostrar los primeros 5 resúmenes
+        st.text(f"Original Abstract[{j}]: {df['Abstract (Original Language)'].iloc[j]}")
+    # --- FIN DEBUGGING TRADUCCIÓN ---
 
     # Traducir resúmenes al español usando el nombre de columna original
     with st.spinner("Traduciendo resúmenes al español... Esto puede tomar un momento."):
