@@ -2,14 +2,13 @@ import streamlit as st
 import pandas as pd
 from deep_translator import GoogleTranslator
 import re
-import time # Importar la librería time para añadir retardos
+# Ya no necesitamos 'time' para el retardo en la traducción en esta versión
 
 # Configuración de la página de Streamlit
 st.set_page_config(page_title="Informe de Patentes Apícolas V1", layout="wide")
 
 # ===== Estilos CSS personalizados =====
 # Estos estilos controlan la apariencia de la página y las tarjetas.
-# Se ha revertido al estilo original de tarjeta con solo texto.
 page_style = """
 <style>
 body {
@@ -87,8 +86,7 @@ def traducir_texto(texto, src="en", dest="es"):
     if not isinstance(texto, str) or len(texto.strip()) < 5:
         return "Contenido no disponible o demasiado corto para traducir."
     try:
-        # Añadir un pequeño retardo para evitar problemas de rate limiting
-        time.sleep(0.1) # Espera 0.1 segundos antes de traducir
+        # En esta versión, no se añade retardo, como en la original
         return GoogleTranslator(source=src, target=dest).translate(texto)
     except Exception as e:
         # st.warning(f"Error de traducción para el texto: '{texto[:50]}...' - {e}") # Descomentar para depurar errores de traducción
@@ -97,44 +95,44 @@ def traducir_texto(texto, src="en", dest="es"):
 @st.cache_data(show_spinner=False)
 def cargar_y_preparar_datos(filepath):
     """
-    Carga los datos del archivo Excel y traduce títulos y resúmenes.
+    Carga los datos del archivo CSV y traduce títulos y resúmenes.
     Utiliza st.cache_data para cachear los resultados y evitar recargas innecesarias.
     """
-    # Leer el archivo Excel, especificando que los encabezados están en la segunda fila (índice 1)
-    df = pd.read_excel(filepath, header=1)
+    # Leer el archivo CSV
+    df = pd.read_csv(filepath)
 
-    # Usamos los nombres de columna originales directamente.
+    # Usamos los nombres de columna originales del CSV
     required_columns = [
-        "Title (Original language)",
-        "Abstract (Original Language)",
-        "Publication Number",
-        "Publication Date",
-        # "Front Page Drawing", # No se usa en esta versión
-        "Inventor - DWPI"
+        "Title",
+        "Abstract",
+        "Publication numbers",
+        "Publication dates",
+        "Inventors"
     ]
 
     # Verificar que todas las columnas requeridas existen en el DataFrame
     missing_columns = [col for col in required_columns if col not in df.columns]
     if missing_columns:
-        st.error(f"Error: Faltan las siguientes columnas en el archivo Excel: {missing_columns}")
+        st.error(f"Error: Faltan las siguientes columnas en el archivo CSV: {missing_columns}")
         st.error(f"Por favor, verifica los nombres de las columnas en tu archivo '{filepath}'.")
         st.stop() # Detener la ejecución de la app
 
     # Limpiar títulos usando el nombre de columna original
-    df["Titulo_limpio"] = df["Title (Original language)"].apply(limpiar_titulo)
+    df["Titulo_limpio"] = df["Title"].apply(limpiar_titulo)
 
-    # Traducir títulos al español usando el nombre de columna original
+    # Traducir títulos al español
     with st.spinner("Traduciendo títulos al español... Esto puede tomar un momento."):
         df["Titulo_es"] = [traducir_texto(t) for t in df["Titulo_limpio"]]
 
-    # Traducir resúmenes al español usando el nombre de columna original
+    # Traducir resúmenes al español
     with st.spinner("Traduciendo resúmenes al español... Esto puede tomar un momento."):
-        df["Resumen_es"] = [traducir_texto(t) for t in df["Abstract (Original Language)"]]
+        df["Resumen_es"] = [traducir_texto(t) for t in df["Abstract"]]
 
     return df
 
 # ===== Cargar y preparar datos =====
-df = cargar_y_preparar_datos("prueba5docu.xlsx")
+# Asegúrate de que el nombre del archivo CSV sea correcto
+df = cargar_y_preparar_datos("ORBIT_REGISTRO_QUERY")
 
 
 # ===== Lógica principal de la aplicación: Landing page o vista detallada =====
@@ -152,20 +150,20 @@ if "idx" in query_params:
             st.subheader("Información Clave")
 
             # Número de Publicación (usando el nombre de columna original)
-            st.markdown(f"- **Número de Publicación:** {patente.get('Publication Number', 'No disponible')}")
+            st.markdown(f"- **Número de Publicación:** {patente.get('Publication numbers', 'No disponible')}")
 
             # País de Origen (primeros dos caracteres del número de publicación)
-            pub_number_str = str(patente.get('Publication Number', ''))
+            pub_number_str = str(patente.get('Publication numbers', ''))
             pais_origen = pub_number_str[:2] if len(pub_number_str) >= 2 else "No disponible"
             st.markdown(f"- **País de Origen:** {pais_origen}")
 
             # Fecha de Publicación (primer elemento si hay varios, separados por espacio o punto y coma)
-            pub_dates_str = str(patente.get('Publication Date', ''))
+            pub_dates_str = str(patente.get('Publication dates', ''))
             fecha_publicacion = re.split(r'[; ]+', pub_dates_str)[0].strip() if pub_dates_str else "No disponible"
             st.markdown(f"- **Fecha de Publicación:** {fecha_publicacion}")
 
-            # Inventores (mostrados como lista) - Usando "Inventor - DWPI"
-            inventors = patente.get('Inventor - DWPI', 'No disponible')
+            # Inventores (mostrados como lista) - Usando "Inventors"
+            inventors = patente.get('Inventors', 'No disponible')
             if pd.isna(inventors) or inventors == 'No disponible':
                 st.markdown(f"- **Inventores:** No disponible")
             else:
