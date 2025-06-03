@@ -24,74 +24,77 @@ body {
     padding: 10px; /* Pequeño padding alrededor del contenedor */
 }
 
-/* Estilos para el botón de Streamlit que simula la tarjeta */
-/* Importante: el padding se ha movido al contenido interno para un control más preciso */
-.stButton>button {
+/* Estilo para la "tarjeta" visual que contendrá la imagen, título y botón */
+.custom-card {
     background-color: white;
     border: 1px solid #ddd;
     border-radius: 12px;
-    padding: 0; /* Eliminar padding del botón para que el contenido lo maneje */
-    margin: 0; /* Eliminar margen del botón, el 'gap' del contenedor lo maneja */
-    width: 300px; /* Ancho fijo de la tarjeta */
-    height: 250px; /* Alto fijo de la tarjeta (imagen + título) */
     box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
-    transition: transform 0.2s ease, background-color 0.2s ease;
-    cursor: pointer;
-    display: flex; /* Usar flexbox para organizar imagen y texto */
-    flex-direction: column; /* Apilar imagen y texto verticalmente */
-    align-items: center; /* Centrar contenido horizontalmente */
-    justify-content: flex-start; /* Alinear contenido al inicio (arriba) */
-    color: inherit; /* Heredar color de texto */
-    overflow: hidden; /* Ocultar cualquier contenido que se desborde */
-}
-
-.stButton>button:hover {
-    transform: scale(1.02);
-    background-color: #f0f0f0;
-}
-
-/* Estilos para el contenido interno de la tarjeta (imagen y título) */
-.card-content {
+    transition: transform 0.2s ease;
+    overflow: hidden; /* Asegura que el contenido no se desborde */
+    width: 300px; /* Ancho fijo de la tarjeta */
+    height: 280px; /* Alto fijo de la tarjeta (imagen + título + botón) */
     display: flex;
     flex-direction: column;
-    width: 100%;
-    height: 100%;
+    justify-content: space-between; /* Espacio entre imagen/título y botón */
+    align-items: center;
+    padding-bottom: 10px; /* Espacio para el botón en la parte inferior */
+}
+
+.custom-card:hover {
+    transform: scale(1.02);
 }
 
 /* Contenedor de la imagen dentro de la tarjeta */
-.image-container {
+.image-container-card {
     width: 100%;
     height: 180px; /* Alto fijo para la imagen */
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden; /* Recortar si la imagen es muy grande */
+    overflow: hidden;
     background-color: #f0f0f0; /* Color de fondo si no hay imagen */
-    border-top-left-radius: 12px; /* Mantener bordes redondeados */
+    border-top-left-radius: 12px;
     border-top-right-radius: 12px;
 }
 
 /* Estilos para la imagen dentro del contenedor */
-.image-container img {
-    width: 100%; /* La imagen ocupa el 100% del ancho del contenedor */
-    height: 100%; /* La imagen ocupa el 100% del alto del contenedor */
-    object-fit: contain; /* Ajustar la imagen para que quepa sin recortarse, manteniendo el aspecto */
-    /* object-fit: cover; // Opcional: si prefieres que la imagen cubra el área y se recorte */
+.image-container-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Ajustar la imagen para que quepa sin recortarse */
 }
 
 /* Contenedor del título dentro de la tarjeta */
-.title-container {
-    padding: 8px 12px; /* Padding para el texto del título */
+.title-container-card {
+    padding: 8px 12px;
     text-align: center;
     font-weight: bold;
-    font-size: 16px; /* Tamaño de fuente para el título */
+    font-size: 16px;
     flex-grow: 1; /* Permite que el título ocupe el espacio restante */
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden; /* Ocultar texto desbordado */
-    text-overflow: ellipsis; /* Añadir puntos suspensivos si el texto es muy largo */
-    white-space: normal; /* Permitir que el texto se envuelva */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+}
+
+/* Estilos para el botón "Ver detalles" */
+.stButton>button {
+    background-color: #4CAF50; /* Un color verde para el botón */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 15px;
+    margin-top: 5px; /* Espacio entre el título y el botón */
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+}
+
+.stButton>button:hover {
+    background-color: #45a049;
 }
 
 /* Ajustes para las columnas de Streamlit para evitar márgenes duplicados */
@@ -127,21 +130,15 @@ def cargar_y_preparar_datos(filepath):
     Utiliza st.cache_data para cachear los resultados y evitar recargas innecesarias.
     """
     # Leer el archivo Excel, especificando que los encabezados están en la segunda fila (índice 1)
-    # Si tus encabezados están en otra fila, ajusta el valor de 'header' (ej: header=2 para la tercera fila)
-    df = pd.read_excel(filepath, header=1) # <--- CAMBIO CLAVE AQUÍ: Se añade header=1
-
-    # --- DEBUGGING: Mostrar las columnas reales del Excel después de leer con header ---
-    st.info(f"Columnas encontradas en el archivo Excel (después de usar header=1): {df.columns.tolist()}")
-    # --- FIN DEBUGGING ---
+    df = pd.read_excel(filepath, header=1)
 
     # Usamos los nombres de columna originales directamente.
-    # Asegúrate de que estas columnas existan en tu archivo Excel.
     required_columns = [
         "Title (Original language)",
         "Abstract (Original Language)",
         "Publication Number",
         "Publication Date",
-        "Front Page Drawing", # Este es el nombre que estamos buscando
+        "Front Page Drawing",
         "Inventor - DWPI"
     ]
 
@@ -166,7 +163,6 @@ def cargar_y_preparar_datos(filepath):
     return df
 
 # ===== Cargar y preparar datos =====
-# Asegúrate de que el nombre del archivo Excel sea correcto
 df = cargar_y_preparar_datos("prueba5docu.xlsx")
 
 
@@ -194,7 +190,6 @@ if "idx" in query_params:
 
             # Fecha de Publicación (primer elemento si hay varios, separados por espacio o punto y coma)
             pub_dates_str = str(patente.get('Publication Date', ''))
-            # Usar regex para dividir por espacios o punto y coma
             fecha_publicacion = re.split(r'[; ]+', pub_dates_str)[0].strip() if pub_dates_str else "No disponible"
             st.markdown(f"- **Fecha de Publicación:** {fecha_publicacion}")
 
@@ -203,7 +198,6 @@ if "idx" in query_params:
             if pd.isna(inventors) or inventors == 'No disponible':
                 st.markdown(f"- **Inventores:** No disponible")
             else:
-                # Dividir por punto y coma y limpiar espacios
                 inventors_list = [inv.strip() for inv in str(inventors).split(';') if inv.strip()]
                 st.markdown(f"- **Inventores:**")
                 for inv in inventors_list:
@@ -217,8 +211,8 @@ if "idx" in query_params:
 
             # Botón para volver a la página principal
             if st.button("🔙 Volver"):
-                query_params.clear() # Limpia los parámetros de la URL
-                st.rerun() # Fuerza una nueva ejecución de la app
+                query_params.clear()
+                st.rerun()
         else:
             st.error("Índice de patente no válido.")
             if st.button("🔙 Volver a la página principal"):
@@ -244,8 +238,7 @@ else:
     st.markdown('<div class="container">', unsafe_allow_html=True)
 
     # Iterar sobre las patentes para crear las tarjetas
-    # Usamos st.columns para la disposición en 3 columnas
-    cols = st.columns(3)
+    cols = st.columns(3) # Mantenemos 3 columnas
     for i, titulo in enumerate(df["Titulo_es"]):
         with cols[i % 3]: # Asigna cada tarjeta a una columna de 3
             # Usando el nombre de columna original para la imagen
@@ -254,21 +247,25 @@ else:
             if not image_url or not isinstance(image_url, str):
                 image_url = "https://placehold.co/300x180/A0A0A0/FFFFFF?text=No+Image"
 
-            # Construir el contenido HTML para el label del botón
-            # Este HTML será interpretado por Streamlit como parte del botón
-            card_label_html = f"""
-            <div class="card-content">
-                <div class="image-container">
+            # --- NUEVA ESTRUCTURA DE LA TARJETA ---
+            # Creamos un contenedor HTML para la tarjeta visual
+            st.markdown(f"""
+            <div class="custom-card">
+                <div class="image-container-card">
                     <img src="{image_url}" onerror="this.onerror=null;this.src='https://placehold.co/300x180/A0A0A0/FFFFFF?text=No+Image';" alt="Imagen de la patente"/>
                 </div>
-                <div class="title-container">
+                <div class="title-container-card">
                     {titulo}
                 </div>
+                <!-- El botón real de Streamlit se colocará aquí abajo -->
             </div>
-            """
-            # Crear el botón. Cuando se presiona, se actualizan los query_params y se re-ejecuta la app.
-            if st.button(card_label_html, key=f"patent_card_{i}"):
+            """, unsafe_allow_html=True)
+
+            # Colocamos el botón de Streamlit justo debajo de la tarjeta HTML.
+            # Este botón es el que realmente manejará la interacción y la navegación.
+            if st.button("Ver detalles", key=f"patent_card_button_{i}"):
                 st.query_params["idx"] = str(i)
                 st.rerun()
+            # --- FIN NUEVA ESTRUCTURA DE LA TARJETA ---
 
     st.markdown('</div>', unsafe_allow_html=True)
