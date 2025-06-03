@@ -132,7 +132,7 @@ def cargar_y_preparar_datos(filepath):
 
 # ===== Cargar y preparar datos =====
 # Asegúrate de que el nombre del archivo CSV sea correcto
-df = cargar_y_preparar_datos("ORBIT_REGISTRO_QUERY")
+df = cargar_y_preparar_datos("ORBIT_REGISTRO_QUERY.csv")
 
 
 # ===== Lógica principal de la aplicación: Landing page o vista detallada =====
