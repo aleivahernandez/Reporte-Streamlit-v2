@@ -79,7 +79,7 @@ body {
 .youtube-container {
     position: relative;
     width: 100%;
-    max-width: 30% !important; /* Limita el ancho máximo del video al 30% de su contenedor */
+    max-width: 37.5% !important; /* Ajustado para que sea ~30% del ancho total de la pantalla (37.5% de 80%) */
     padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
     height: 0;
     overflow: hidden;
