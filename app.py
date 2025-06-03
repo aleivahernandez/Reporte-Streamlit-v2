@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from deep_translator import GoogleTranslator
 import re
+import time # Importar la librería time para añadir retardos
 
 # Configuración de la página de Streamlit
 st.set_page_config(page_title="Informe de Patentes Apícolas V1", layout="wide")
@@ -86,6 +87,8 @@ def traducir_texto(texto, src="en", dest="es"):
     if not isinstance(texto, str) or len(texto.strip()) < 5:
         return "Contenido no disponible o demasiado corto para traducir."
     try:
+        # Añadir un pequeño retardo para evitar problemas de rate limiting
+        time.sleep(0.1) # Espera 0.1 segundos antes de traducir
         return GoogleTranslator(source=src, target=dest).translate(texto)
     except Exception as e:
         # st.warning(f"Error de traducción para el texto: '{texto[:50]}...' - {e}") # Descomentar para depurar errores de traducción
@@ -120,21 +123,9 @@ def cargar_y_preparar_datos(filepath):
     # Limpiar títulos usando el nombre de columna original
     df["Titulo_limpio"] = df["Title (Original language)"].apply(limpiar_titulo)
 
-    # --- DEBUGGING TRADUCCIÓN: Mostrar los primeros títulos originales ---
-    st.subheader("DEBUG: Primeros títulos originales antes de traducir")
-    for j in range(min(5, len(df))): # Mostrar los primeros 5 títulos
-        st.text(f"Original Title[{j}]: {df['Title (Original language)'].iloc[j]}")
-    # --- FIN DEBUGGING TRADUCCIÓN ---
-
     # Traducir títulos al español usando el nombre de columna original
     with st.spinner("Traduciendo títulos al español... Esto puede tomar un momento."):
         df["Titulo_es"] = [traducir_texto(t) for t in df["Titulo_limpio"]]
-
-    # --- DEBUGGING TRADUCCIÓN: Mostrar los primeros resúmenes originales ---
-    st.subheader("DEBUG: Primeros resúmenes originales antes de traducir")
-    for j in range(min(5, len(df))): # Mostrar los primeros 5 resúmenes
-        st.text(f"Original Abstract[{j}]: {df['Abstract (Original Language)'].iloc[j]}")
-    # --- FIN DEBUGGING TRADUCCIÓN ---
 
     # Traducir resúmenes al español usando el nombre de columna original
     with st.spinner("Traduciendo resúmenes al español... Esto puede tomar un momento."):
