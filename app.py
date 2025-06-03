@@ -123,32 +123,41 @@ def traducir_texto(texto, src="en", dest="es"):
 @st.cache_data(show_spinner=False)
 def cargar_y_preparar_datos(filepath):
     """
-    Carga los datos del archivo Excel, renombra columnas y traduce títulos y resúmenes.
+    Carga los datos del archivo Excel y traduce títulos y resúmenes.
     Utiliza st.cache_data para cachear los resultados y evitar recargas innecesarias.
     """
     # Leer el archivo Excel
     df = pd.read_excel(filepath)
 
-    # Renombrar columnas para un acceso más fácil y consistencia
-    df = df.rename(columns={
-        "Title (Original language)": "Title",
-        "Abstract (Original Language)": "Abstract",
-        "Publication Number": "Publication Number",
-        "Publication Date": "Publication Date",
-        "Front Page Drawing": "Front Page Drawing",
-        "Inventors": "Inventors"
-    })
+    # --- NO SE RENOMBRAN LAS COLUMNAS ---
+    # Usamos los nombres de columna originales directamente.
+    # Asegúrate de que estas columnas existan en tu archivo Excel.
+    required_columns = [
+        "Title (Original language)",
+        "Abstract (Original Language)",
+        "Publication Number",
+        "Publication Date",
+        "Front Page Drawing",
+        "Inventor - DWPI" # Actualizado a "Inventor - DWPI"
+    ]
 
-    # Limpiar títulos (si es necesario según los nuevos datos)
-    df["Titulo_limpio"] = df["Title"].apply(limpiar_titulo)
+    # Verificar que todas las columnas requeridas existen en el DataFrame
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    if missing_columns:
+        st.error(f"Error: Faltan las siguientes columnas en el archivo Excel: {missing_columns}")
+        st.error(f"Columnas disponibles en el archivo: {df.columns.tolist()}")
+        st.stop() # Detener la ejecución de la app
 
-    # Traducir títulos al español
+    # Limpiar títulos usando el nombre de columna original
+    df["Titulo_limpio"] = df["Title (Original language)"].apply(limpiar_titulo)
+
+    # Traducir títulos al español usando el nombre de columna original
     with st.spinner("Traduciendo títulos al español... Esto puede tomar un momento."):
         df["Titulo_es"] = [traducir_texto(t) for t in df["Titulo_limpio"]]
 
-    # Traducir resúmenes al español
+    # Traducir resúmenes al español usando el nombre de columna original
     with st.spinner("Traduciendo resúmenes al español... Esto puede tomar un momento."):
-        df["Resumen_es"] = [traducir_texto(t) for t in df["Abstract"]]
+        df["Resumen_es"] = [traducir_texto(t) for t in df["Abstract (Original Language)"]]
 
     return df
 
@@ -171,7 +180,7 @@ if "idx" in query_params:
             # --- SECCIÓN DE INFORMACIÓN CLAVE ---
             st.subheader("Información Clave")
 
-            # Número de Publicación
+            # Número de Publicación (usando el nombre de columna original)
             st.markdown(f"- **Número de Publicación:** {patente.get('Publication Number', 'No disponible')}")
 
             # País de Origen (primeros dos caracteres del número de publicación)
@@ -185,8 +194,8 @@ if "idx" in query_params:
             fecha_publicacion = re.split(r'[; ]+', pub_dates_str)[0].strip() if pub_dates_str else "No disponible"
             st.markdown(f"- **Fecha de Publicación:** {fecha_publicacion}")
 
-            # Inventores (mostrados como lista)
-            inventors = patente.get('Inventors', 'No disponible')
+            # Inventores (mostrados como lista) - Actualizado a "Inventor - DWPI"
+            inventors = patente.get('Inventor - DWPI', 'No disponible') # Actualizado aquí
             if pd.isna(inventors) or inventors == 'No disponible':
                 st.markdown(f"- **Inventores:** No disponible")
             else:
@@ -198,7 +207,7 @@ if "idx" in query_params:
             st.markdown("---")
             # --- FIN SECCIÓN DE INFORMACIÓN CLAVE ---
 
-            # Resumen de la patente
+            # Resumen de la patente (usando el nombre de columna original)
             st.markdown(f"**Resumen:** {patente.get('Resumen_es', 'Resumen no disponible.')}")
             st.markdown("---")
 
@@ -235,6 +244,7 @@ else:
     cols = st.columns(3)
     for i, titulo in enumerate(df["Titulo_es"]):
         with cols[i % 3]: # Asigna cada tarjeta a una columna de 3
+            # Usando el nombre de columna original para la imagen
             image_url = df.iloc[i].get('Front Page Drawing', '')
             # Si la URL de la imagen está vacía o no es válida, usa una imagen de placeholder
             if not image_url or not isinstance(image_url, str):
@@ -258,4 +268,3 @@ else:
                 st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
-
