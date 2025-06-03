@@ -16,7 +16,7 @@ body {
 }
 /* Estilo para el contenedor principal de la aplicación */
 .stApp {
-    max-width: 80% !important; /* Limita el ancho máximo al 80% de la pantalla */
+    max-width: 80%; /* Limita el ancho máximo al 80% de la pantalla */
     margin: auto; /* Centra la aplicación en la pantalla */
 }
 .card {
@@ -78,9 +78,8 @@ body {
 /* Estilos para el iframe de YouTube */
 .youtube-container {
     position: relative;
-    width: 100%;
-    max-width: 37.5% !important; /* Ajustado para que sea ~30% del ancho total de la pantalla (37.5% de 80%) */
-    padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+    max-width: 30vw; /* Limita el ancho máximo del video al 30% del ancho del viewport */
+    padding-bottom: calc(30vw * 9 / 16); /* Calcula el padding-bottom para mantener 16:9 basado en 30vw */
     height: 0;
     overflow: hidden;
     margin: 0 auto 20px auto; /* Centra el contenedor y añade margen inferior */
