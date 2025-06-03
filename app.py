@@ -129,7 +129,10 @@ def cargar_y_preparar_datos(filepath):
     # Leer el archivo Excel
     df = pd.read_excel(filepath)
 
-    # --- NO SE RENOMBRAN LAS COLUMNAS ---
+    # --- DEBUGGING: Mostrar las columnas reales del Excel ---
+    st.info(f"Columnas encontradas en el archivo Excel: {df.columns.tolist()}")
+    # --- FIN DEBUGGING ---
+
     # Usamos los nombres de columna originales directamente.
     # Asegúrate de que estas columnas existan en tu archivo Excel.
     required_columns = [
@@ -138,14 +141,14 @@ def cargar_y_preparar_datos(filepath):
         "Publication Number",
         "Publication Date",
         "Front Page Drawing",
-        "Inventor - DWPI" # Actualizado a "Inventor - DWPI"
+        "Inventor - DWPI"
     ]
 
     # Verificar que todas las columnas requeridas existen en el DataFrame
     missing_columns = [col for col in required_columns if col not in df.columns]
     if missing_columns:
         st.error(f"Error: Faltan las siguientes columnas en el archivo Excel: {missing_columns}")
-        st.error(f"Columnas disponibles en el archivo: {df.columns.tolist()}")
+        st.error(f"Por favor, verifica los nombres de las columnas en tu archivo '{filepath}'.")
         st.stop() # Detener la ejecución de la app
 
     # Limpiar títulos usando el nombre de columna original
@@ -195,7 +198,7 @@ if "idx" in query_params:
             st.markdown(f"- **Fecha de Publicación:** {fecha_publicacion}")
 
             # Inventores (mostrados como lista) - Actualizado a "Inventor - DWPI"
-            inventors = patente.get('Inventor - DWPI', 'No disponible') # Actualizado aquí
+            inventors = patente.get('Inventor - DWPI', 'No disponible')
             if pd.isna(inventors) or inventors == 'No disponible':
                 st.markdown(f"- **Inventores:** No disponible")
             else:
