@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 from deep_translator import GoogleTranslator
 import re
+# Importar la función de web scraping desde el nuevo archivo
+from webscraping_utils import get_direct_image_url_from_page
 
 # Configuración de la página de Streamlit
 st.set_page_config(page_title="Informe de Patentes Apícolas V2", layout="wide")
@@ -160,6 +162,12 @@ def cargar_y_preparar_datos(filepath):
     with st.spinner("Traduciendo resúmenes al español... Esto puede tomar un momento."):
         df["Resumen_es"] = [traducir_texto(t) for t in df["Abstract (Original Language)"]]
 
+    # --- NUEVO: Procesar URLs de imágenes para obtener enlaces directos ---
+    st.info("Intentando extraer URLs de imagen directas de las páginas de dibujo... Esto puede tardar.")
+    # Ahora llamamos a la función desde el archivo webscraping_utils
+    df['Direct_Image_URL'] = df['Front Page Drawing'].apply(get_direct_image_url_from_page)
+    # --- FIN NUEVO ---
+
     return df
 
 # ===== Cargar y preparar datos =====
@@ -241,13 +249,13 @@ else:
     cols = st.columns(3) # Mantenemos 3 columnas
     for i, titulo in enumerate(df["Titulo_es"]):
         with cols[i % 3]: # Asigna cada tarjeta a una columna de 3
-            # Usando el nombre de columna original para la imagen
-            image_url = df.iloc[i].get('Front Page Drawing', '')
+            # Usamos la nueva columna 'Direct_Image_URL'
+            image_url = df.iloc[i].get('Direct_Image_URL', '')
+
             # Si la URL de la imagen está vacía o no es válida, usa una imagen de placeholder
             if not image_url or not isinstance(image_url, str):
                 image_url = "https://placehold.co/300x180/A0A0A0/FFFFFF?text=No+Image"
 
-            # --- NUEVA ESTRUCTURA DE LA TARJETA ---
             # Creamos un contenedor HTML para la tarjeta visual
             st.markdown(f"""
             <div class="custom-card">
@@ -257,7 +265,6 @@ else:
                 <div class="title-container-card">
                     {titulo}
                 </div>
-                <!-- El botón real de Streamlit se colocará aquí abajo -->
             </div>
             """, unsafe_allow_html=True)
 
@@ -266,6 +273,5 @@ else:
             if st.button("Ver detalles", key=f"patent_card_button_{i}"):
                 st.query_params["idx"] = str(i)
                 st.rerun()
-            # --- FIN NUEVA ESTRUCTURA DE LA TARJETA ---
 
     st.markdown('</div>', unsafe_allow_html=True)
