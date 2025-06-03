@@ -126,11 +126,12 @@ def cargar_y_preparar_datos(filepath):
     Carga los datos del archivo Excel y traduce títulos y resúmenes.
     Utiliza st.cache_data para cachear los resultados y evitar recargas innecesarias.
     """
-    # Leer el archivo Excel
-    df = pd.read_excel(filepath)
+    # Leer el archivo Excel, especificando que los encabezados están en la segunda fila (índice 1)
+    # Si tus encabezados están en otra fila, ajusta el valor de 'header' (ej: header=2 para la tercera fila)
+    df = pd.read_excel(filepath, header=1) # <--- CAMBIO CLAVE AQUÍ: Se añade header=1
 
-    # --- DEBUGGING: Mostrar las columnas reales del Excel ---
-    st.info(f"Columnas encontradas en el archivo Excel: {df.columns.tolist()}")
+    # --- DEBUGGING: Mostrar las columnas reales del Excel después de leer con header ---
+    st.info(f"Columnas encontradas en el archivo Excel (después de usar header=1): {df.columns.tolist()}")
     # --- FIN DEBUGGING ---
 
     # Usamos los nombres de columna originales directamente.
@@ -140,7 +141,7 @@ def cargar_y_preparar_datos(filepath):
         "Abstract (Original Language)",
         "Publication Number",
         "Publication Date",
-        "Front Page Drawing",
+        "Front Page Drawing", # Este es el nombre que estamos buscando
         "Inventor - DWPI"
     ]
 
@@ -197,7 +198,7 @@ if "idx" in query_params:
             fecha_publicacion = re.split(r'[; ]+', pub_dates_str)[0].strip() if pub_dates_str else "No disponible"
             st.markdown(f"- **Fecha de Publicación:** {fecha_publicacion}")
 
-            # Inventores (mostrados como lista) - Actualizado a "Inventor - DWPI"
+            # Inventores (mostrados como lista) - Usando "Inventor - DWPI"
             inventors = patente.get('Inventor - DWPI', 'No disponible')
             if pd.isna(inventors) or inventors == 'No disponible':
                 st.markdown(f"- **Inventores:** No disponible")
