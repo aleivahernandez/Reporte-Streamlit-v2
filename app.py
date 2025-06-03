@@ -185,6 +185,29 @@ if st.session_state.current_view == 'home':
         st.info("La solución Cárnica aún no está disponible. ¡Pronto tendremos más información!")
         # No se redirige a ninguna parte, se queda en la página principal
 
+    st.markdown("---") # Separador visual
+
+    # ===== Sección de Newsletter =====
+    st.subheader("Suscríbete a nuestro Newsletter")
+    st.write("Mantente al día con nuestras últimas soluciones e innovaciones.")
+
+    email_input = st.text_input("Ingresa tu correo electrónico", placeholder="tu.email@ejemplo.com")
+
+    newsletter_topic = st.selectbox(
+        "Selecciona los temas de tu interés",
+        ("Solución Apícola", "Solución Cárnica")
+    )
+
+    if st.button("Solicitar Suscripción"):
+        if email_input and "@" in email_input and "." in email_input:
+            st.success(f"¡Gracias por suscribirte, {email_input}! Te enviaremos información sobre {newsletter_topic}.")
+            # Aquí iría la lógica para guardar el correo y el tema en una base de datos,
+            # pero por ahora solo mostramos un mensaje de éxito.
+        else:
+            st.error("Por favor, ingresa un correo electrónico válido.")
+    # ===== Fin Sección de Newsletter =====
+
+
 elif st.session_state.current_view == 'apicola':
     # ===== Cargar y preparar datos (solo se carga cuando se necesita la vista apícola) =====
     # Asegúrate de que el nombre del archivo CSV sea correcto
@@ -264,7 +287,7 @@ elif st.session_state.current_view == 'apicola':
                 st.rerun()
     else:
         # Landing page con la lista de tarjetas de patentes apícolas
-        st.title("Informe de Patentes Apícolas - Landing Page")
+        st.title("Informe de Patentes Apícolas") # Título actualizado
         st.markdown("Haz clic en una patente para ver más detalles.")
 
         # Contenedor HTML para las tarjetas (gestionado por CSS Flexbox)
