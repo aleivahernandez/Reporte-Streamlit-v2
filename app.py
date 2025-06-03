@@ -74,10 +74,11 @@ body {
 .youtube-container {
     position: relative;
     width: 100%;
+    max-width: 800px; /* Limita el ancho máximo del video */
     padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
     height: 0;
     overflow: hidden;
-    margin-bottom: 20px;
+    margin: 0 auto 20px auto; /* Centra el contenedor y añade margen inferior */
 }
 .youtube-container iframe {
     position: absolute;
