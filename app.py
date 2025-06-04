@@ -3,6 +3,8 @@ import pandas as pd
 from deep_translator import GoogleTranslator
 import re
 # Ya no necesitamos 'time' para el retardo en la traducción en esta versión
+# Importar la función de web scraping desde el nuevo archivo
+from report_scraper import scrape_reports_page
 
 # Configuración de la página de Streamlit
 st.set_page_config(page_title="Informe de Patentes Apícolas V1", layout="wide")
@@ -16,7 +18,7 @@ body {
 }
 /* Estilo para el contenedor principal de la aplicación */
 .stApp {
-    max-width: 90%; /* Limita el ancho máximo al 80% de la pantalla */
+    max-width: 80%; /* Limita el ancho máximo al 80% de la pantalla */
     margin: auto; /* Centra la aplicación en la pantalla */
 }
 .card {
@@ -174,7 +176,7 @@ if st.session_state.current_view == 'home':
     # parece ser un placeholder y podría no mostrar un video real de YouTube.
     # Para un video real, necesitarías una URL de embed de YouTube válida.
 
-    st.write("Selecciona una solución para explorar:")
+    st.subheader("Selecciona una solución para explorar:") # Título actualizado
     solution_choice = st.selectbox(
         "Busca tu solución",
         ("Selecciona una opción", "Solución Apícola", "Solución Cárnica"),
