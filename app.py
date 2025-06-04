@@ -16,7 +16,7 @@ body {
 }
 /* Estilo para el contenedor principal de la aplicación */
 .stApp {
-    max-width: 85%; /* Limita el ancho máximo al 80% de la pantalla */
+    max-width: 90%; /* Limita el ancho máximo al 80% de la pantalla */
     margin: auto; /* Centra la aplicación en la pantalla */
 }
 .card {
